@@ -1,3 +1,6 @@
+import { ImageSourcePropType } from 'react-native';
+import { getWrestlerPhoto } from './wrestlerPhotos';
+
 export interface MatchHistory {
     id: string;
     opponentName: string;
@@ -16,6 +19,7 @@ export interface Wrestler {
     height: number;
     weight: number;
     imageUrl: string;
+    localImage?: ImageSourcePropType;
     coverImageUrl?: string;
     championships: string;
     medals?: { gold: number, silver: number, bronze: number };
@@ -181,6 +185,7 @@ const generateWrestlers = (): Wrestler[] => {
             height: parseFloat((1.75 + (item.id % 20) / 100).toFixed(2)),
             weight: 95 + (item.id % 25),
             imageUrl: imageUrl,
+            localImage: getWrestlerPhoto(item.name) || undefined,
             championships: champ,
             medals: medals,
             totalMatches: totalMatches,

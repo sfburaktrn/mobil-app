@@ -124,7 +124,7 @@ export const ProfileScreen = () => {
                     {/* Avatar */}
                     <View style={styles.avatarGlow}>
                         <Image
-                            source={{ uri: item.imageUrl }}
+                            source={item.localImage || { uri: item.imageUrl }}
                             style={styles.avatarImage}
                             defaultSource={require('../../assets/icon.png')}
                         />
