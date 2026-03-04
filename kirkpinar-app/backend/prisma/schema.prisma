@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum EventStatus {
+  PRE_EVENT
+  LIVE
+  COMPLETED
+}
+
+model TournamentEvent {
+  id        Int       @id @default(autoincrement())
+  year      Int       @unique
+  startDate DateTime
+  endDate   DateTime
+  status    EventStatus @default(PRE_EVENT)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  matches     Match[]
+  predictions Prediction[]
+}
+
+model Wrestler {
+  id          Int      @id @default(autoincrement())
+  fullName    String
+  hometown    String?
+  bio         String?
+  imageUrl    String?
+  weight      Float?
+  height      Float?
+  title       String?  // e.g., "Başpehlivan"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  matchesAsWrestler1 Match[] @relation("Wrestler1")
+  matchesAsWrestler2 Match[] @relation("Wrestler2")
+  matchesWon         Match[] @relation("Winner")
+  predictions        Prediction[]
+}
+
+model Match {
+  id                Int      @id @default(autoincrement())
+  tournamentEventId Int
+  wrestler1Id       Int
+  wrestler2Id       Int
+  winnerId          Int?
+  round             String   // e.g., "Çeyrek Final", "Yarı Final", "Final"
+  startTime         DateTime?
+  status            String   @default("SCHEDULED") // SCHEDULED, LIVE, COMPLETED
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  tournamentEvent TournamentEvent @relation(fields: [tournamentEventId], references: [id])
+  wrestler1       Wrestler        @relation("Wrestler1", fields: [wrestler1Id], references: [id])
+  wrestler2       Wrestler        @relation("Wrestler2", fields: [wrestler2Id], references: [id])
+  winner          Wrestler?       @relation("Winner", fields: [winnerId], references: [id])
+  predictions     Prediction[]
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  phoneNumber String?  @unique
+  email       String?  @unique
+  fullName    String?
+  secretKey   String?  // for hashed passwords/auth
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  predictions Prediction[]
+}
+
+model Prediction {
+  id                Int      @id @default(autoincrement())
+  userId            Int
+  matchId           Int
+  tournamentEventId Int
+  predictedWinnerId Int
+  scoreEarned       Int      @default(0)
+  predictionTime    DateTime @default(now())
+  createdAt         DateTime @default(now())
+
+  user            User            @relation(fields: [userId], references: [id])
+  match           Match           @relation(fields: [matchId], references: [id])
+  tournamentEvent TournamentEvent @relation(fields: [tournamentEventId], references: [id])
+  predictedWinner Wrestler        @relation(fields: [predictedWinnerId], references: [id])
+
+  @@unique([userId, matchId]) // A user can only predict once per match
+}
