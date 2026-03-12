@@ -8,10 +8,14 @@ const queryClient = new QueryClient();
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <SafeAreaProvider>
-        <AppNavigator />
-        <StatusBar style="light" />
-      </SafeAreaProvider>
+      <>
+        <SafeAreaProvider>
+          <AppNavigator />
+          <StatusBar style="light" />
+        </SafeAreaProvider>
+      </>
     </QueryClientProvider>
   );
 }
+
+
