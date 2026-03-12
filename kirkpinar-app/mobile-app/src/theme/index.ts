@@ -1,28 +1,40 @@
 export const theme = {
     colors: {
-        background: '#0F1115', // Deep dark background
-        surface: '#1A1D24', // Slightly lighter dark
-        primary: '#D4AF37', // Zeytinyağı Sarısı / Gold (Kırkpınar theme)
-        primaryLight: '#F3E5AB', // Light Gold
+        background: '#07110C',
+        backgroundAlt: '#0D1712',
+        surface: '#121D17',
+        surfaceElevated: '#1A2920',
+        card: 'rgba(18, 29, 23, 0.88)',
+        cardMuted: 'rgba(255, 255, 255, 0.04)',
+        primary: '#D4AF37',
+        primaryLight: '#F3E5AB',
+        bronze: '#B9854E',
+        olive: '#5E7A43',
         text: '#FFFFFF',
         textSecondary: '#A0AAB2',
+        textMuted: '#7D8A84',
         success: '#4ADE80',
+        warning: '#F59E0B',
         danger: '#F87171',
+        border: 'rgba(212, 175, 55, 0.22)',
         glassBorder: 'rgba(255, 255, 255, 0.1)',
         glassBackground: 'rgba(26, 29, 36, 0.65)',
     },
     spacing: {
+        xxs: 2,
         xs: 4,
         sm: 8,
         md: 16,
         lg: 24,
         xl: 32,
         xxl: 48,
+        xxxl: 64,
     },
     borderRadius: {
         sm: 8,
         md: 16,
         lg: 24,
+        xl: 32,
         full: 9999,
     },
 };

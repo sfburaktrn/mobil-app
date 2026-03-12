@@ -1,97 +1,206 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, FlatList, ListRenderItem, Image } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { GlassCard } from '../components/GlassCard';
 import { CustomButton } from '../components/CustomButton';
+import { WrestlerAvatar } from '../components/WrestlerAvatar';
 import { theme } from '../theme';
-import { TOURNAMENT_MATCHES, TournamentMatch } from '../utils/mockData';
+import {
+    FEATURED_MATCHES,
+    HOME_HIGHLIGHTS,
+    KIRKPINAR_EVENT,
+    LEADERBOARD,
+    SPOTLIGHT_WRESTLERS,
+} from '../utils/mockData';
+
+const getTimeLeft = (targetDate: string) => {
+    const diff = new Date(targetDate).getTime() - Date.now();
+
+    if (diff <= 0) {
+        return { days: '00', hours: '00', minutes: '00', seconds: '00' };
+    }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const minutes = Math.floor((diff / (1000 * 60)) % 60);
+    const seconds = Math.floor((diff / 1000) % 60);
+
+    return {
+        days: String(days).padStart(2, '0'),
+        hours: String(hours).padStart(2, '0'),
+        minutes: String(minutes).padStart(2, '0'),
+        seconds: String(seconds).padStart(2, '0'),
+    };
+};
 
 export const HomeScreen = () => {
-    // Record of matchId -> wrestlerIndex (1 or 2)
-    const [predictions, setPredictions] = useState<Record<string, number>>({});
+    const { width } = useWindowDimensions();
+    const isCompact = width < 430;
+    const navigation = useNavigation<any>();
+    const [timeLeft, setTimeLeft] = useState(() => getTimeLeft(KIRKPINAR_EVENT.startDate));
 
-    const handlePredict = (matchId: string, wrestlerIndex: number) => {
-        setPredictions(prev => ({ ...prev, [matchId]: wrestlerIndex }));
-        // TODO: Call Backend Queue API
-    };
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setTimeLeft(getTimeLeft(KIRKPINAR_EVENT.startDate));
+        }, 1000);
 
-    const renderMatch: ListRenderItem<TournamentMatch> = ({ item }) => {
-        const predictedSide = predictions[item.id];
-        return (
-            <GlassCard style={styles.matchCard} intensity={25}>
-                {/* Top Badge */}
-                <View style={styles.badgeRow}>
-                    <View style={styles.liveBadge}>
-                        <View style={[styles.liveIndicator, { opacity: 0.8 }]} />
-                        <Text style={styles.liveText}>EŞLEŞME</Text>
-                    </View>
-                    <Text style={styles.roundText}>{item.round}</Text>
-                </View>
+        return () => clearInterval(timer);
+    }, []);
 
-                {/* Gladiators */}
-                <View style={styles.vsContainer}>
-                    <View style={styles.wrestlerCol}>
-                        <View style={styles.avatarGlow}>
-                            <Image source={{ uri: item.wrestler1.imageUrl }} style={styles.avatarImage} />
-                        </View>
-                        <Text style={styles.wrestlerName}>{item.wrestler1.name}</Text>
-                        <Text style={styles.wrestlerTitle}>{item.wrestler1.city}</Text>
-                    </View>
-
-                    <View style={styles.vsBadge}>
-                        <Text style={styles.vsText}>VS</Text>
-                    </View>
-
-                    <View style={styles.wrestlerCol}>
-                        <View style={styles.avatarGlow}>
-                            <Image source={{ uri: item.wrestler2.imageUrl }} style={styles.avatarImage} />
-                        </View>
-                        <Text style={styles.wrestlerName}>{item.wrestler2.name}</Text>
-                        <Text style={styles.wrestlerTitle}>{item.wrestler2.city}</Text>
-                    </View>
-                </View>
-
-                {/* Actions */}
-                <View style={styles.predictionActions}>
-                    <CustomButton
-                        title={`${item.wrestler1.name.split(' ')[0]}'İ SEÇ`}
-                        variant={predictedSide === 1 ? 'primary' : 'outline'}
-                        onPress={() => handlePredict(item.id, 1)}
-                        style={styles.actionButton}
-                    />
-                    <CustomButton
-                        title={`${item.wrestler2.name.split(' ')[0]}'İ SEÇ`}
-                        variant={predictedSide === 2 ? 'primary' : 'outline'}
-                        onPress={() => handlePredict(item.id, 2)}
-                        style={styles.actionButton}
-                    />
-                </View>
-            </GlassCard>
-        );
-    };
+    const topThree = useMemo(() => LEADERBOARD.slice(0, 3), []);
 
     return (
         <LinearGradient
-            colors={['#1a1500', '#0a0a0c', '#000000']}
+            colors={['#07110C', '#0D1712', '#020504']}
             style={styles.container}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
         >
             <SafeAreaView style={styles.safeArea}>
-                <FlatList
-                    data={TOURNAMENT_MATCHES}
-                    keyExtractor={item => item.id}
-                    contentContainerStyle={styles.scrollContent}
-                    renderItem={renderMatch}
-                    showsVerticalScrollIndicator={false}
-                    ListHeaderComponent={() => (
-                        <View style={styles.header}>
-                            <Text style={styles.brandTitle}>KIRKPINAR</Text>
-                            <View style={styles.divider} />
-                            <Text style={styles.brandSubtitle}>664. TURNUVA - 80 PEHLİVAN</Text>
+                <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+                    <View style={styles.header}>
+                        <Text style={styles.brandEyebrow}>ER MEYDANI DENEYİMİ</Text>
+                        <Text style={styles.brandTitle}>KIRKPINAR</Text>
+                        <Text style={[styles.brandSubtitle, isCompact && styles.brandSubtitleCompact]}>{KIRKPINAR_EVENT.subtitle}</Text>
+                    </View>
+
+                    <GlassCard style={styles.heroCard} intensity={24}>
+                        <Text style={styles.heroTitle}>{KIRKPINAR_EVENT.title}</Text>
+                        <Text style={styles.heroMeta}>
+                            {KIRKPINAR_EVENT.venue} / {KIRKPINAR_EVENT.city}
+                        </Text>
+
+                        <View style={styles.countdownRow}>
+                            {[
+                                { label: 'GÜN', value: timeLeft.days },
+                                { label: 'SAAT', value: timeLeft.hours },
+                                { label: 'DAK', value: timeLeft.minutes },
+                                { label: 'SN', value: timeLeft.seconds },
+                            ].map((item) => (
+                                <View key={item.label} style={styles.countdownItem}>
+                                    <Text style={styles.countdownValue}>{item.value}</Text>
+                                    <Text style={styles.countdownLabel}>{item.label}</Text>
+                                </View>
+                            ))}
                         </View>
-                    )}
-                />
+
+                        <Text style={styles.deadlineText}>{KIRKPINAR_EVENT.predictionDeadlineText}</Text>
+
+                        <View style={[styles.heroButtonRow, isCompact && styles.heroButtonRowCompact]}>
+                            <CustomButton
+                                title="Tahminlere Git"
+                                onPress={() => navigation.navigate('Tahminler')}
+                                style={styles.heroButton}
+                            />
+                            <CustomButton
+                                title="Pehlivanları Keşfet"
+                                variant="outline"
+                                onPress={() => navigation.navigate('Pehlivanlar')}
+                                style={styles.heroButton}
+                            />
+                        </View>
+                    </GlassCard>
+
+                    <View style={[styles.highlightRow, isCompact && styles.highlightRowCompact]}>
+                        {HOME_HIGHLIGHTS.map((highlight) => (
+                            <GlassCard key={highlight.id} style={styles.highlightCard} intensity={16}>
+                                <Text style={styles.highlightLabel}>{highlight.label}</Text>
+                                <Text style={styles.highlightValue}>{highlight.value}</Text>
+                            </GlassCard>
+                        ))}
+                    </View>
+
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>Öne Çıkan Eşleşmeler</Text>
+                        <TouchableOpacity onPress={() => navigation.navigate('Tahminler')}>
+                            <Text style={styles.sectionLink}>Tümünü gör</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalList}>
+                        {FEATURED_MATCHES.map((match) => (
+                            <GlassCard key={match.id} style={[styles.matchCard, { width: Math.min(Math.max(width * 0.74, 250), 320) }]} intensity={18}>
+                                <Text style={styles.roundBadge}>{match.round}</Text>
+                                <View style={styles.matchHeader}>
+                                    <View style={styles.matchWrestler}>
+                                        <WrestlerAvatar wrestler={match.wrestler1} size={60} />
+                                        <Text style={styles.matchName}>{match.wrestler1.name}</Text>
+                                        <Text style={styles.matchCity}>{match.wrestler1.city}</Text>
+                                    </View>
+                                    <Text style={styles.vsText}>VS</Text>
+                                    <View style={styles.matchWrestler}>
+                                        <WrestlerAvatar wrestler={match.wrestler2} size={60} />
+                                        <Text style={styles.matchName}>{match.wrestler2.name}</Text>
+                                        <Text style={styles.matchCity}>{match.wrestler2.city}</Text>
+                                    </View>
+                                </View>
+                            </GlassCard>
+                        ))}
+                    </ScrollView>
+
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>Günün Pehlivanları</Text>
+                        <TouchableOpacity onPress={() => navigation.navigate('Pehlivanlar')}>
+                            <Text style={styles.sectionLink}>Keşfet</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {SPOTLIGHT_WRESTLERS.slice(0, 3).map((wrestler) => (
+                        <GlassCard key={wrestler.id} style={styles.spotlightCard} intensity={18}>
+                            <View style={styles.spotlightHeader}>
+                                <WrestlerAvatar wrestler={wrestler} size={68} />
+                                <View style={styles.spotlightInfo}>
+                                    <Text style={styles.spotlightName}>{wrestler.name}</Text>
+                                    <Text style={styles.spotlightMeta}>
+                                        {wrestler.city} / {wrestler.title}
+                                    </Text>
+                                    <Text style={styles.spotlightDesc} numberOfLines={3}>
+                                        {wrestler.about}
+                                    </Text>
+                                </View>
+                            </View>
+                        </GlassCard>
+                    ))}
+
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>Kırkpınar’dan Bir Bilgi</Text>
+                        <TouchableOpacity onPress={() => navigation.navigate('Tarihçe')}>
+                            <Text style={styles.sectionLink}>Devamı</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    <GlassCard style={styles.infoCard} intensity={18}>
+                        <Text style={styles.infoTitle}>Altın kemer sadece güç değil istikrar ödülüdür.</Text>
+                        <Text style={styles.infoText}>
+                            Başpehlivanlık yolculuğunda tek bir güçlü an yetmez; kondisyon, sabır, oyun bilgisi ve psikolojik dayanıklılık birlikte çalışır.
+                        </Text>
+                    </GlassCard>
+
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>Sıralama Özeti</Text>
+                        <TouchableOpacity onPress={() => navigation.navigate('Sıralama')}>
+                            <Text style={styles.sectionLink}>Tam tablo</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {topThree.map((entry, index) => (
+                        <GlassCard key={entry.id} style={styles.rankingCard} intensity={16}>
+                            <View style={styles.rankingRow}>
+                                <Text style={styles.rankingPosition}>#{index + 1}</Text>
+                                <View style={styles.rankingInfo}>
+                                    <Text style={styles.rankingName}>{entry.name}</Text>
+                                    <Text style={styles.rankingMeta}>
+                                        {entry.city} / %{entry.accuracy} isabet
+                                    </Text>
+                                </View>
+                                <Text style={styles.rankingPoints}>{entry.points}</Text>
+                            </View>
+                        </GlassCard>
+                    ))}
+                </ScrollView>
             </SafeAreaView>
         </LinearGradient>
     );
@@ -105,136 +214,243 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scrollContent: {
-        flexGrow: 1,
         padding: theme.spacing.lg,
-        paddingTop: theme.spacing.xl,
+        paddingBottom: theme.spacing.xxxl,
     },
     header: {
-        alignItems: 'center',
-        marginBottom: theme.spacing.xxl,
+        marginBottom: theme.spacing.lg,
     },
-    brandTitle: {
-        fontSize: 38,
-        fontFamily: 'System',
-        fontWeight: '900',
-        color: '#E5C07B', // Soft Premium Gold
-        letterSpacing: 8,
-        textShadowColor: 'rgba(229, 192, 123, 0.3)',
-        textShadowOffset: { width: 0, height: 4 },
-        textShadowRadius: 15,
-    },
-    divider: {
-        width: 60,
-        height: 2,
-        backgroundColor: '#E5C07B',
-        marginTop: 12,
-        marginBottom: 12,
-        opacity: 0.5,
-    },
-    brandSubtitle: {
+    brandEyebrow: {
+        color: theme.colors.olive,
         fontSize: 12,
-        color: '#A0AAB2',
-        letterSpacing: 4,
-        fontWeight: '600',
-    },
-    matchCard: {
-        marginTop: theme.spacing.md,
-    },
-    badgeRow: {
-        alignItems: 'center',
-        marginBottom: 30,
-    },
-    liveBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(239, 68, 68, 0.15)',
-        paddingHorizontal: 12,
-        paddingVertical: 4,
-        borderRadius: 4,
-        borderWidth: 1,
-        borderColor: 'rgba(239, 68, 68, 0.3)',
-        marginBottom: 16,
-    },
-    liveIndicator: {
-        width: 6,
-        height: 6,
-        borderRadius: 3,
-        backgroundColor: '#EF4444',
-        marginRight: 6,
-    },
-    liveText: {
-        color: '#EF4444',
-        fontWeight: '800',
-        fontSize: 11,
-        letterSpacing: 2,
-    },
-    roundText: {
-        color: '#FFFFFF',
-        fontSize: 14,
         fontWeight: '700',
         letterSpacing: 2,
-        opacity: 0.9,
+        marginBottom: theme.spacing.sm,
     },
-    vsContainer: {
+    brandTitle: {
+        color: theme.colors.primaryLight,
+        fontSize: 36,
+        fontWeight: '900',
+        letterSpacing: 4,
+    },
+    brandSubtitle: {
+        marginTop: theme.spacing.sm,
+        color: theme.colors.textSecondary,
+        fontSize: 15,
+        lineHeight: 22,
+    },
+    brandSubtitleCompact: {
+        fontSize: 14,
+        lineHeight: 20,
+    },
+    heroCard: {
+        marginTop: theme.spacing.md,
+        marginBottom: theme.spacing.lg,
+    },
+    heroTitle: {
+        color: theme.colors.text,
+        fontSize: 24,
+        fontWeight: '900',
+        lineHeight: 30,
+    },
+    heroMeta: {
+        color: theme.colors.primary,
+        fontSize: 14,
+        fontWeight: '700',
+        marginTop: theme.spacing.sm,
+    },
+    countdownRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: theme.spacing.lg,
+        marginBottom: theme.spacing.lg,
+        gap: theme.spacing.sm,
+    },
+    countdownItem: {
+        flex: 1,
+        alignItems: 'center',
+        paddingVertical: theme.spacing.md,
+        borderRadius: theme.borderRadius.md,
+        backgroundColor: theme.colors.cardMuted,
+    },
+    countdownValue: {
+        color: theme.colors.primaryLight,
+        fontSize: 24,
+        fontWeight: '900',
+    },
+    countdownLabel: {
+        color: theme.colors.textSecondary,
+        fontSize: 11,
+        fontWeight: '700',
+        letterSpacing: 1,
+        marginTop: theme.spacing.xs,
+    },
+    deadlineText: {
+        color: theme.colors.textSecondary,
+        fontSize: 13,
+        lineHeight: 20,
+        marginBottom: theme.spacing.lg,
+    },
+    heroButtonRow: {
+        flexDirection: 'row',
+        gap: theme.spacing.sm,
+    },
+    heroButtonRowCompact: {
+        flexDirection: 'column',
+    },
+    heroButton: {
+        flex: 1,
+    },
+    highlightRow: {
+        flexDirection: 'row',
+        gap: theme.spacing.sm,
+        marginBottom: theme.spacing.xl,
+    },
+    highlightRowCompact: {
+        flexDirection: 'column',
+    },
+    highlightCard: {
+        flex: 1,
+    },
+    highlightLabel: {
+        color: theme.colors.textMuted,
+        fontSize: 11,
+        fontWeight: '700',
+        letterSpacing: 1,
+        marginBottom: theme.spacing.xs,
+    },
+    highlightValue: {
+        color: theme.colors.text,
+        fontSize: 15,
+        fontWeight: '800',
+        lineHeight: 20,
+    },
+    sectionHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 40,
+        marginBottom: theme.spacing.md,
     },
-    wrestlerCol: {
+    sectionTitle: {
+        color: theme.colors.text,
+        fontSize: 20,
+        fontWeight: '800',
+    },
+    sectionLink: {
+        color: theme.colors.primary,
+        fontSize: 13,
+        fontWeight: '700',
+    },
+    horizontalList: {
+        paddingBottom: theme.spacing.lg,
+        gap: theme.spacing.md,
+    },
+    matchCard: {
+    },
+    roundBadge: {
+        color: theme.colors.olive,
+        fontSize: 11,
+        fontWeight: '800',
+        letterSpacing: 1,
+        marginBottom: theme.spacing.md,
+    },
+    matchHeader: {
+        flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: theme.spacing.sm,
+    },
+    matchWrestler: {
         flex: 1,
+        alignItems: 'center',
     },
-    avatarGlow: {
-        shadowColor: '#E5C07B',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.3,
-        shadowRadius: 20,
-        marginBottom: 16,
-    },
-    avatarImage: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        borderWidth: 2,
-        borderColor: 'rgba(229, 192, 123, 0.8)',
-    },
-    wrestlerName: {
-        color: '#FFFFFF',
-        fontSize: 18,
+    matchName: {
+        marginTop: theme.spacing.sm,
+        color: theme.colors.text,
+        fontSize: 14,
         fontWeight: '800',
         textAlign: 'center',
-        letterSpacing: 1,
-        marginBottom: 4,
     },
-    wrestlerTitle: {
-        color: '#A0AAB2',
+    matchCity: {
+        color: theme.colors.textSecondary,
         fontSize: 12,
-        fontWeight: '600',
-        textTransform: 'uppercase',
-        letterSpacing: 1,
-    },
-    vsBadge: {
-        backgroundColor: '#1A1D24',
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.1)',
+        marginTop: theme.spacing.xs,
     },
     vsText: {
-        color: '#A0AAB2',
-        fontSize: 16,
+        color: theme.colors.primary,
+        fontSize: 18,
         fontWeight: '900',
-        fontStyle: 'italic',
     },
-    predictionActions: {
+    spotlightCard: {
+        marginBottom: theme.spacing.md,
+    },
+    spotlightHeader: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        gap: 16,
+        gap: theme.spacing.md,
     },
-    actionButton: {
+    spotlightInfo: {
         flex: 1,
-        paddingVertical: 16,
+    },
+    spotlightName: {
+        color: theme.colors.text,
+        fontSize: 18,
+        fontWeight: '800',
+        marginBottom: theme.spacing.xs,
+    },
+    spotlightMeta: {
+        color: theme.colors.primary,
+        fontSize: 13,
+        fontWeight: '700',
+        marginBottom: theme.spacing.sm,
+    },
+    spotlightDesc: {
+        color: theme.colors.textSecondary,
+        fontSize: 13,
+        lineHeight: 20,
+    },
+    infoCard: {
+        marginBottom: theme.spacing.xl,
+    },
+    infoTitle: {
+        color: theme.colors.primaryLight,
+        fontSize: 18,
+        fontWeight: '800',
+        marginBottom: theme.spacing.sm,
+    },
+    infoText: {
+        color: theme.colors.textSecondary,
+        fontSize: 14,
+        lineHeight: 22,
+    },
+    rankingCard: {
+        marginBottom: theme.spacing.sm,
+    },
+    rankingRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    rankingPosition: {
+        color: theme.colors.primary,
+        fontSize: 20,
+        fontWeight: '900',
+        width: 40,
+    },
+    rankingInfo: {
+        flex: 1,
+    },
+    rankingName: {
+        color: theme.colors.text,
+        fontSize: 15,
+        fontWeight: '800',
+    },
+    rankingMeta: {
+        color: theme.colors.textSecondary,
+        fontSize: 12,
+        marginTop: theme.spacing.xs,
+    },
+    rankingPoints: {
+        color: theme.colors.primaryLight,
+        fontSize: 18,
+        fontWeight: '900',
     },
 });

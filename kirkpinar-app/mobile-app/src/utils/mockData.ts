@@ -35,6 +35,41 @@ export interface TournamentMatch {
     wrestler2: Wrestler;
 }
 
+export interface EventInfo {
+    id: string;
+    title: string;
+    subtitle: string;
+    venue: string;
+    city: string;
+    startDate: string;
+    phase: 'upcoming' | 'live' | 'completed';
+    predictionDeadlineText: string;
+}
+
+export interface InfoSection {
+    id: string;
+    title: string;
+    body: string;
+    accent: 'gold' | 'olive' | 'bronze';
+}
+
+export interface TimelineItem {
+    year: string;
+    title: string;
+    detail: string;
+}
+
+export interface RankingEntry {
+    id: string;
+    name: string;
+    city: string;
+    points: number;
+    accuracy: number;
+    streak: number;
+    badge: string;
+    isCurrentUser?: boolean;
+}
+
 const RAW_DATA = [
     { "id": 1, "name": "Yusuf Can Zeybek", "hometown": "Antalya", "about": "2023-2024 Kırkpınar Başpehlivanı. Paça kazık oyununda usta, yüksek kondisyonlu.", "last_5_matches": ["W", "W", "W", "L", "W"], "photo_url": "https://img.cdn.com/pehlivan/yusuf-can.jpg" },
     { "id": 2, "name": "Ali Gürbüz", "hometown": "Antalya", "about": "Mega Star. Üç kez Altın Kemer sahibi. Teknik ve fizik gücü çok yüksek.", "last_5_matches": ["W", "L", "W", "W", "W"], "photo_url": "https://img.cdn.com/pehlivan/ali-gurbuz.jpg" },
@@ -65,13 +100,11 @@ const RAW_DATA = [
     { "id": 27, "name": "Cengizhan Şimşek", "hometown": "Antalya", "about": "Tribünlerin sevgilisi. Hırslı ve gösterişli güreşir.", "last_5_matches": ["W", "W", "W", "W", "W"], "photo_url": "https://img.cdn.com/pehlivan/cengizhan.jpg" },
     { "id": 28, "name": "Yalçın Üncül", "hometown": "Bursa", "about": "Bursa'nın en güçlü ismi. Sabırlı ve teknik.", "last_5_matches": ["W", "W", "L", "L", "L"], "photo_url": "https://img.cdn.com/pehlivan/yalcin.jpg" },
     { "id": 29, "name": "Süleyman Aykırı", "hometown": "Sakarya", "about": "Yılların tecrübesi, zorlu kura çekimlerinin korkulu rüyası.", "last_5_matches": ["L", "W", "L", "W", "L"], "photo_url": "https://img.cdn.com/pehlivan/suleyman.jpg" },
-    { "id": 30, "name": "Menderes Yılmaz", "hometown": "Antalya", "about": "Hızlı ve çevik. Küçük boy avantajını hıza çevirir.", "last_5_matches": ["W", "L", "W", "L", "W"], "photo_url": "https://img.cdn.com/pehlivan/menderes.jpg" },
     { "id": 31, "name": "Semih Turgut", "hometown": "Yalova", "about": "Yalova'nın tek başpehlivanı. Çok dirençli.", "last_5_matches": ["W", "L", "W", "L", "W"], "photo_url": "https://img.cdn.com/pehlivan/semih-turgut.jpg" },
     { "id": 32, "name": "Hüseyin İyican", "hometown": "Manisa", "about": "Ege bölgesinin yükselen değeri. Teknik kapasitesi yüksek.", "last_5_matches": ["L", "W", "L", "W", "L"], "photo_url": "https://img.cdn.com/pehlivan/iyican.jpg" },
     { "id": 33, "name": "Salih Dorum", "hometown": "Antalya", "about": "Çayırın en eski kurtlarından. Oyun bilgisi derya.", "last_5_matches": ["L", "L", "W", "W", "L"], "photo_url": "https://img.cdn.com/pehlivan/salih-dorum.jpg" },
     { "id": 34, "name": "Serhat Gökmen", "hometown": "Samsun", "about": "Atak güreşiyle bilinir, her an maçı bitirebilir.", "last_5_matches": ["W", "W", "L", "L", "W"], "photo_url": "https://img.cdn.com/pehlivan/serhat-gokmen.jpg" },
     { "id": 35, "name": "Rıza Yıldırım", "hometown": "Tokat", "about": "Minderden gelen çevikliği yağla birleştiriyor.", "last_5_matches": ["L", "W", "L", "W", "W"], "photo_url": "https://img.cdn.com/pehlivan/riza-yildirim.jpg" },
-    { "id": 36, "name": "Ali Altun", "hometown": "Antalya", "about": "Direnciyle rakiplerini yoran, puanlamada etkili isim.", "last_5_matches": ["W", "L", "L", "W", "L"], "photo_url": "https://img.cdn.com/pehlivan/ali-altun.jpg" },
     { "id": 37, "name": "Furkan Durmuş Altın", "hometown": "Antalya", "about": "Yükselen bir form grafiğine sahip genç yetenek.", "last_5_matches": ["W", "W", "L", "W", "L"], "photo_url": "https://img.cdn.com/pehlivan/furkan.jpg" },
     { "id": 38, "name": "Faruk Akkoyun", "hometown": "Kocaeli", "about": "Sert ve yıpratıcı güreşiyle tanınan tecrübeli isim.", "last_5_matches": ["L", "W", "L", "W", "W"], "photo_url": "https://img.cdn.com/pehlivan/faruk.jpg" },
     { "id": 39, "name": "Şaban Yılmaz", "hometown": "Samsun", "about": "Eski şampiyon. Gücüyle hâlâ gençlere taş çıkartıyor.", "last_5_matches": ["L", "L", "L", "W", "W"], "photo_url": "https://img.cdn.com/pehlivan/saban.jpg" },
@@ -121,7 +154,7 @@ const RAW_DATA = [
 const generateWrestlers = (): Wrestler[] => {
     return RAW_DATA.map((item, index) => {
         const recentMatches: MatchHistory[] = item.last_5_matches.map((res, mIndex) => {
-            const oppIndex = (index + mIndex * 3 + 1) % 80;
+            const oppIndex = (index + mIndex * 3 + 1) % RAW_DATA.length;
             const oppName = RAW_DATA[oppIndex].name;
             return {
                 id: `m_${item.id}_${mIndex}`,
@@ -199,12 +232,15 @@ export const BASPEHLIVANLAR = generateWrestlers();
 
 const generateTournament = (): TournamentMatch[] => {
     const matches: TournamentMatch[] = [];
-    for (let i = 0; i < 40; i++) {
+    const totalWrestlers = BASPEHLIVANLAR.length;
+    const firstRoundMatchCount = Math.floor(totalWrestlers / 2);
+
+    for (let i = 0; i < firstRoundMatchCount; i++) {
         matches.push({
             id: `match_${i + 1}`,
-            round: 'KIRKPINAR 1. TUR EŞLEŞMELERİ',
+            round: '665. KIRKPINAR 1. TUR',
             wrestler1: BASPEHLIVANLAR[i],
-            wrestler2: BASPEHLIVANLAR[79 - i]
+            wrestler2: BASPEHLIVANLAR[totalWrestlers - 1 - i]
         });
     }
     return matches;
@@ -212,4 +248,92 @@ const generateTournament = (): TournamentMatch[] => {
 
 export const TOURNAMENT_MATCHES = generateTournament();
 
-export const MOCK_KIRKPINAR_INFO = "Kırkpınar Yağlı Güreşleri'nin 664. sürümünde tam 80 Başpehlivan er meydanına çıkıyor. Kura çekimi sonucu oluşan 40 eşleşmeli 1. Tur maçlarına hoş geldiniz!";
+export const KIRKPINAR_EVENT: EventInfo = {
+    id: 'kirkpinar-2026',
+    title: '665. Tarihi Kırkpınar Yağlı Güreşleri',
+    subtitle: 'Er meydanında 78 başpehlivan, tek kemer, tek zirve.',
+    venue: 'Sarayiçi Er Meydanı',
+    city: 'Edirne',
+    startDate: '2026-07-03T12:00:00+03:00',
+    phase: 'upcoming',
+    predictionDeadlineText: 'İlk tur tahminleri kura sonrası kapanır.'
+};
+
+export const MOCK_KIRKPINAR_INFO = "665. Tarihi Kırkpınar Yağlı Güreşleri yaklaşırken er meydanında 78 başpehlivan altın kemer için hazırlanıyor. Uygulama; eşleşmeleri takip etmeni, tahmin yapmanı ve pehlivanların hikayelerini keşfetmeni sağlar.";
+
+export const FEATURED_MATCHES = TOURNAMENT_MATCHES.slice(0, 6);
+
+export const SPOTLIGHT_WRESTLERS = BASPEHLIVANLAR.filter((wrestler) =>
+    [1, 2, 3, 4, 5, 6].includes(wrestler.id)
+);
+
+export const HOME_HIGHLIGHTS = [
+    {
+        id: 'highlight-1',
+        label: 'Er Meydanı',
+        value: 'Sarayiçi / Edirne',
+    },
+    {
+        id: 'highlight-2',
+        label: 'Başpehlivan',
+        value: '78 isim',
+    },
+    {
+        id: 'highlight-3',
+        label: 'Ödüllü Lig',
+        value: 'İlk 100 kullanıcı',
+    },
+];
+
+export const HISTORY_SECTIONS: InfoSection[] = [
+    {
+        id: 'origin',
+        title: 'Kırkpınar Efsanesi',
+        body: 'Kırkpınar, Osmanlı dönemine uzanan ve güreşi sadece spor değil bir tören olarak yaşatan en köklü geleneklerden biridir. Cazgır, peşrev, kispet ve dualarla her müsabaka bir kültür mirasına dönüşür.',
+        accent: 'gold',
+    },
+    {
+        id: 'golden-belt',
+        title: 'Altın Kemer',
+        body: 'Başpehlivanın ödülü yalnızca bir şampiyonluk değil, yağlı güreşte ustalık ve sürekliliğin simgesi olan altın kemerdir. Kemer, gücün yanında sabrı ve oyun bilgisini de temsil eder.',
+        accent: 'bronze',
+    },
+    {
+        id: 'rituals',
+        title: 'Er Meydanı Ritüelleri',
+        body: 'Pehlivanların peşrevle sahaya çıkması, cazgırın manileri, dualar ve seyirciyle kurulan bağ Kırkpınar\'ı diğer tüm turnuvalardan ayıran törensel dili oluşturur.',
+        accent: 'olive',
+    },
+];
+
+export const KIRKPINAR_TIMELINE: TimelineItem[] = [
+    {
+        year: '1362',
+        title: 'Başlangıç Rivayeti',
+        detail: 'Kırkpınar geleneğinin kökeni, Rumeli\'ye geçen akıncıların güreş hikayelerine dayandırılır.',
+    },
+    {
+        year: '1924',
+        title: 'Cumhuriyet Dönemi',
+        detail: 'Modern dönemde organizasyon yapısı güçlenir ve Edirne Kırkpınar\'ın kalıcı adresi olur.',
+    },
+    {
+        year: '2010+',
+        title: 'Yayın ve Dijitalleşme',
+        detail: 'Kırkpınar, televizyon ve dijital platformlarla daha geniş kitlelere ulaşan bir kültür markasına dönüşür.',
+    },
+    {
+        year: 'Bugün',
+        title: 'Yeni Nesil Rekabet',
+        detail: 'Lig sistemi, veri odaklı analizler ve tahmin deneyimleriyle Kırkpınar yeni kuşaklarla buluşuyor.',
+    },
+];
+
+export const LEADERBOARD: RankingEntry[] = [
+    { id: '1', name: 'Emre K.', city: 'Edirne', points: 920, accuracy: 84, streak: 9, badge: 'Altın Seri' },
+    { id: '2', name: 'Mert A.', city: 'Antalya', points: 905, accuracy: 82, streak: 7, badge: 'Favori Avcısı' },
+    { id: '3', name: 'Zeynep T.', city: 'Bursa', points: 894, accuracy: 81, streak: 6, badge: 'Kura Ustası' },
+    { id: '4', name: 'Sen', city: 'İstanbul', points: 872, accuracy: 79, streak: 5, badge: 'Yükselişte', isCurrentUser: true },
+    { id: '5', name: 'Kaan D.', city: 'Samsun', points: 860, accuracy: 78, streak: 4, badge: 'İsabetli Seçim' },
+    { id: '6', name: 'Ayşe B.', city: 'Kocaeli', points: 854, accuracy: 77, streak: 3, badge: 'Hızlı Tahmin' },
+];

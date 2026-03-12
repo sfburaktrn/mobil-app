@@ -24,5 +24,9 @@ export const buildApp = async () => {
         return { status: 'ok', timestamp: new Date() }
     })
 
+    await app.register(predictionRoutes, {
+        prefix: '/api/predictions',
+    })
+
     return app
 }
